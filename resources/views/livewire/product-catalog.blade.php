@@ -11,17 +11,6 @@
                         Collections
                     </span>
                     <div class="block space-y-4">
-                        @php
-                        $collections = [
-                        'Outwear',
-                        'Top',
-                        'Bottom',
-                        'Dress',
-                        'Accessories',
-                        'Footwear',
-                        'Activewear',
-                        ];
-                        @endphp
                         @foreach ($collections as $i => $item)
                         <div class="flex items-center justify-between">
                             <div class="flex">
@@ -30,10 +19,10 @@
                                     id="hs-default-checkbox-{{ $i }}">
                                 <label for="hs-default-checkbox-{{ $i }}"
                                     class="text-sm font-light ms-3 dark:text-neutral-400">
-                                    {{ $item }}
+                                    {{ $item->name }}
                                 </label>
                             </div>
-                            <span class="text-xs text-gray-800 font-loght">({{ rand(1, 99) }})</span>
+                            <span class="text-xs text-gray-800 font-loght">({{ $item->product_count }})</span>
                         </div>
                         @endforeach
                     </div>
@@ -67,7 +56,6 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-1 gap-5 my-5 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
-
                     @forelse ($products as $product)
                     <x-single-product-card :product="$product" />
                     @empty
@@ -75,7 +63,9 @@
                         Product Not Found
                     </div>
                     @endforelse
-
+                </div>
+                <div>
+                    {{ $products->links() }}
                 </div>
             </div>
         </div>
