@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\ProductResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ProductResource\RelationManagers;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\SpatieTagsInput;
@@ -32,7 +33,7 @@ class ProductResource extends Resource
                     SpatieMediaLibraryFileUpload::make('cover')
                         ->collection('cover'),
                     SpatieMediaLibraryFileUpload::make('gallery')
-                        ->collection('cover')
+                        ->collection('gallery')
                         ->multiple(),
                     TextInput::make('name')
                         ->label('Product Name'),
@@ -50,6 +51,7 @@ class ProductResource extends Resource
                         ->numeric()->prefix('Rp'),
                     TextInput::make('weigth')
                         ->numeric()->suffix('gram'),
+                    MarkdownEditor::make('description')
                 ])
             ]);
     }
