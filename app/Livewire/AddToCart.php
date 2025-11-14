@@ -39,6 +39,9 @@ class AddToCart extends Component
             quantity: $this->quantity,
             weigth: $this->weigth
         ));
+
+        $this->dispatch('cart-update');
+        return redirect()->route('cart');
     }
     public function render()
     {
