@@ -39,7 +39,7 @@ class AddToCart extends Component
             quantity: $this->quantity,
             weigth: $this->weigth
         ));
-
+        session()->flash('success', 'Product Added to cart');
         $this->dispatch('cart-update');
         return redirect()->route('cart');
     }
