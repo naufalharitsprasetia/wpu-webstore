@@ -4,9 +4,12 @@ namespace App\Livewire;
 
 use App\Contract\CartServiceInterface;
 use App\Data\CartData;
+use App\Data\RegionData;
+use App\Services\RegionQueryService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Number;
 use Livewire\Component;
+use Spatie\LaravelData\DataCollection;
 
 class Checkout extends Component
 {
@@ -14,7 +17,8 @@ class Checkout extends Component
         'full_name' => null,
         'email' => null,
         'phone' => null,
-        'address_line' => null
+        'address_line' => null,
+        'destination_region_code' => null,
     ];
     public array $summaries = [
         'sub_total' => 0,
@@ -23,6 +27,11 @@ class Checkout extends Component
         'shipping_total_formatted' => '-',
         'grand_total' => 0,
         'grand_total_formatted' => '-'
+    ];
+
+    public array $region_selector = [
+        'keyword' => null,
+        'region_selected' => null
     ];
 
     public function calculateTotal()
@@ -44,6 +53,29 @@ class Checkout extends Component
         return $cart->all();
     }
 
+    public function getRegionsProperty(RegionQueryService $queryService): DataCollection
+    {
+        $keyword = data_get($this->region_selector, 'keyword');
+
+        if (!$keyword) {
+            $data = [];
+            return new DataCollection(RegionData::class, $data);
+        }
+
+        return  $queryService->searchRegionByName($keyword);
+    }
+
+    public function getRegionProperty(RegionQueryService $queryService): ?RegionData
+    {
+        $region_selected = data_get($this->region_selector, 'region_selected');
+
+        if (!$region_selected) {
+            return null;
+        }
+
+        return $queryService->searchRegionByCode($region_selected);
+    }
+
     public function mount()
     {
         if (!Gate::inspect('is_stock_available')->allowed()) {
@@ -59,7 +91,13 @@ class Checkout extends Component
             'data.email' => ['required', 'email', 'max:255'],
             'data.phone' => ['required', 'min:7', 'max:13'],
             'data.address_line' => ['required', 'min:7', 'max:255'],
+            'data.destination_region_code' => ['required'],
         ];
+    }
+
+    public function updatedRegionSelectorRegionSelected($value)
+    {
+        data_set($this->data, 'destination_region_code', $value);
     }
 
     public function placeAnOrder()

@@ -15,8 +15,8 @@
                                 class="@error('data.full_name') border-red-600 @enderror  py-1.5 sm:py-2 px-3 pe-11 block w-full border-gray-200 shadow-2xs sm:text-sm rounded-lg focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
                                 placeholder="Full Name">
                             @error('data.full_name')
-                            <p class="mt-2 text-xs text-red-600" id="hs-validation-name-error-helper">
-                                {{ $message }}</p>
+                                <p class="mt-2 text-xs text-red-600" id="hs-validation-name-error-helper">
+                                    {{ $message }}</p>
                             @enderror
                         </div>
                         <div>
@@ -24,8 +24,8 @@
                                 class="@error('data.email') border-red-600 @enderror py-1.5 sm:py-2 px-3 pe-11 block w-full border-gray-200 shadow-2xs sm:text-sm rounded-lg focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
                                 placeholder="Email">
                             @error('data.email')
-                            <p class="mt-2 text-xs text-red-600" id="hs-validation-name-error-helper">
-                                {{ $message }}</p>
+                                <p class="mt-2 text-xs text-red-600" id="hs-validation-name-error-helper">
+                                    {{ $message }}</p>
                             @enderror
 
                         </div>
@@ -36,8 +36,8 @@
                                 @enderror  py-1.5 sm:py-2 px-3 pe-11 block w-full border-gray-200 shadow-2xs sm:text-sm rounded-lg focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
                                 placeholder="Phone Number">
                             @error('data.phone')
-                            <p class="mt-2 text-xs text-red-600" id="hs-validation-name-error-helper">
-                                {{ $message }}</p>
+                                <p class="mt-2 text-xs text-red-600" id="hs-validation-name-error-helper">
+                                    {{ $message }}</p>
                             @enderror
                         </div>
                     </div>
@@ -56,29 +56,50 @@
                                 @enderror py-1.5 sm:py-2 px-3 pe-11 block w-full border-gray-200 shadow-2xs sm:text-sm rounded-lg focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
                             placeholder="Street Address">
                         @error('data.address_line')
-                        <p class="mt-2 text-xs text-red-600" id="hs-validation-name-error-helper">
-                            {{ $message }}</p>
+                            <p class="mt-2 text-xs text-red-600" id="hs-validation-name-error-helper">
+                                {{ $message }}</p>
                         @enderror
                         <div>
                             <div x-data="{ open: false }" class="relative w-full">
-                                <input type="text" @focus="open = true" @click.outside="open = false"
-                                    class="py-1.5 sm:py-2 px-3 pe-11 block w-full border-gray-200 shadow-2xs sm:text-sm rounded-lg focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-                                    placeholder="Cari Lokasi">
+                                <div class="relative">
+                                    <input type="text" wire:model.live.debounce.500ms="region_selector.keyword"
+                                        @focus="open = true" @click.outside="open = false"
+                                        class="py-1.5 sm:py-2 px-3 pe-11 block w-full border-gray-200 shadow-2xs sm:text-sm rounded-lg focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+                                        placeholder="Cari Lokasi">
+                                    <div wire:loading wire:target="region_selector.keyword"
+                                        class="absolute right-3 top-3 animate-spin inline-block size-4 border-3 border-current border-t-transparent text-blue-500 rounded-full dark:text-blue-500"
+                                        role="status" aria-label="loading">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
 
-                                <ul class="absolute z-10 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-b-lg max-h-60"
-                                    x-show="open">
-                                    <li class="p-2 cursor-pointer hover:bg-gray-100">
-                                        Cikutra, Kota Bandung
-                                    </li>
-                                </ul>
+                                @if ($this->regions->toCollection()->isNotEmpty())
+                                    <ul class="absolute z-10 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-b-lg max-h-60"
+                                        x-show="open">
+                                        @foreach ($this->regions as $region)
+                                            <li class="p-2 cursor-pointer hover:bg-gray-100">
+                                                <label for="region-{{ $region->code }}"
+                                                    class="w-full inline-block cursor-pointer">
+                                                    <input id="region-{{ $region->code }}" type="radio"
+                                                        class="sr-only" value="{{ $region->code }}"
+                                                        wire:model.live="region_selector.region_selected">
+                                                    {{ $region->label }}</label>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
 
-                                <p class="mt-2 text-sm text-gray-600">
-                                    Lokasi Dipilih
-                                    <strong>Cikutra, Kota Bandung, 401900</strong>
-                                </p>
+                                @if ($this->region)
+                                    <p class="mt-2 text-sm text-gray-600">
+                                        Lokasi Dipilih
+                                        <strong>{{ $this->region->label }}</strong>
+                                    </p>
+                                @endif
                             </div>
-                            <p class="mt-2 text-xs text-red-600" id="hs-validation-name-error-helper">
-                                Pesan Error</p>
+                            @error('data.destination_region_code')
+                                <p class="mt-2 text-xs text-red-600" id="hs-validation-name-error-helper">
+                                    {{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
                 </div>
@@ -91,25 +112,26 @@
                         <div class="text-xs font-bold">
                             Regular
                         </div>
-                        @for ($i = 1; $i <= 3; $i++) <label for="shipping_method_{{ $i }}"
-                            class="flex items-center justify-between w-full gap-2 p-2 text-sm bg-white border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
-                            <div class="flex items-center justify-start gap-2">
-                                <input type="radio" name="shipping_method" value="{{ $i }}"
-                                    class="shrink-0 mt-0.5 border-gray-200 rounded-full text-blue-600 focus:ring-blue-500 checked:border-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
-                                    id="shipping_method_{{ $i }}">
-                                <img src="{{ asset('images/shipping/jntexpress.svg') }}" class="h-5" />
+                        @for ($i = 1; $i <= 3; $i++)
+                            <label for="shipping_method_{{ $i }}"
+                                class="flex items-center justify-between w-full gap-2 p-2 text-sm bg-white border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+                                <div class="flex items-center justify-start gap-2">
+                                    <input type="radio" name="shipping_method" value="{{ $i }}"
+                                        class="shrink-0 mt-0.5 border-gray-200 rounded-full text-blue-600 focus:ring-blue-500 checked:border-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
+                                        id="shipping_method_{{ $i }}">
+                                    <img src="{{ asset('images/shipping/jntexpress.svg') }}" class="h-5" />
 
-                                <span class="text-sm text-gray-500 ms-3 dark:text-neutral-400">JNT
-                                    - YES
-                                    <span class="text-xs text-gray-500">(1-2 Day)</span>
+                                    <span class="text-sm text-gray-500 ms-3 dark:text-neutral-400">JNT
+                                        - YES
+                                        <span class="text-xs text-gray-500">(1-2 Day)</span>
+                                    </span>
+                                </div>
+                                <span class="text-sm text-gray-800">
+                                    Rp.123.123
                                 </span>
-                            </div>
-                            <span class="text-sm text-gray-800">
-                                Rp.123.123
-                            </span>
                             </label>
-                            @endfor
-                            <div class="text-xs text-red-600">Fill Shipping Address First</div>
+                        @endfor
+                        <div class="text-xs text-red-600">Fill Shipping Address First</div>
                     </div>
                 </div>
 
@@ -119,22 +141,23 @@
                 <div class="mt-2 space-y-3">
                     <div class="grid space-y-2">
                         @php
-                        $payment_methods = [
-                        'Bank Transfer - BCA',
-                        'Bank Transfer - BNI',
-                        'Virtual Account BCA',
-                        'QRIS',
-                        'Dana',
-                        ];
+                            $payment_methods = [
+                                'Bank Transfer - BCA',
+                                'Bank Transfer - BNI',
+                                'Virtual Account BCA',
+                                'QRIS',
+                                'Dana',
+                            ];
                         @endphp
                         @foreach ($payment_methods as $key => $item)
-                        <label for="payment_method_{{ $key }}"
-                            class="flex w-full p-2 text-sm bg-white border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
-                            <input type="radio" name="hs-vertical-radio-in-form"
-                                class="shrink-0 mt-0.5 border-gray-200 rounded-full text-blue-600 focus:ring-blue-500 checked:border-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
-                                id="payment_method_{{ $key }}">
-                            <span class="text-sm text-gray-500 ms-3 dark:text-neutral-400">{{ $item }}</span>
-                        </label>
+                            <label for="payment_method_{{ $key }}"
+                                class="flex w-full p-2 text-sm bg-white border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+                                <input type="radio" name="hs-vertical-radio-in-form"
+                                    class="shrink-0 mt-0.5 border-gray-200 rounded-full text-blue-600 focus:ring-blue-500 checked:border-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
+                                    id="payment_method_{{ $key }}">
+                                <span
+                                    class="text-sm text-gray-500 ms-3 dark:text-neutral-400">{{ $item }}</span>
+                            </label>
                         @endforeach
 
                     </div>
@@ -144,7 +167,7 @@
                 <h1 class="mb-5 text-2xl font-light">Order Summary</h1>
                 <div>
                     @foreach ($cart->items as $item)
-                    <x-single-product-list :cart_item="$item" />
+                        <x-single-product-list :cart_item="$item" />
                     @endforeach
                 </div>
                 <div class="grid gap-5">
