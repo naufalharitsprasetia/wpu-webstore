@@ -108,35 +108,46 @@
                     Shipping Method
                 </label>
 
-                @foreach ($this->shipping_methods as $shipping)
-                    {{ dd($shipping) }}
-                @endforeach
-
                 <div class="mt-2 space-y-3">
-                    <div class="grid space-y-2">
-                        <div class="text-xs font-bold">
-                            Regular
+                    <div class="w-full text-center relative flex justify-center">
+                        <div wire:loading wire:target="region_selector.region_selected"
+                            class="animate-spin inline-block size-4 border-3 border-current border-t-transparent text-blue-500 rounded-full dark:text-blue-500"
+                            role="status" aria-label="loading">
+                            <span class="sr-only">Loading...</span>
                         </div>
-                        @for ($i = 1; $i <= 3; $i++)
-                            <label for="shipping_method_{{ $i }}"
-                                class="flex items-center justify-between w-full gap-2 p-2 text-sm bg-white border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
-                                <div class="flex items-center justify-start gap-2">
-                                    <input type="radio" name="shipping_method" value="{{ $i }}"
-                                        class="shrink-0 mt-0.5 border-gray-200 rounded-full text-blue-600 focus:ring-blue-500 checked:border-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
-                                        id="shipping_method_{{ $i }}">
-                                    <img src="{{ asset('images/shipping/jntexpress.svg') }}" class="h-5" />
+                    </div>
 
-                                    <span class="text-sm text-gray-500 ms-3 dark:text-neutral-400">JNT
-                                        - YES
-                                        <span class="text-xs text-gray-500">(1-2 Day)</span>
+                    <div class="grid space-y-2">
+                        @forelse ($this->shipping_methods as $group_name => $shipping_method_groups)
+                            <div class="text-xs font-bold">
+                                {{ $group_name }}
+                            </div>
+                            @foreach ($shipping_method_groups as $i => $shipping_method)
+                                <label for="shipping_method_{{ $shipping_method->hash }}"
+                                    class="flex items-center justify-between w-full gap-2 p-2 text-sm bg-white border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+                                    <div class="flex items-center justify-start gap-2">
+                                        <input type="radio" wire:key="{{ $shipping_method->hash }}"
+                                            wire:model.live="shipping_selector.shipping_method"
+                                            value="{{ $shipping_method->hash }}"
+                                            class="shrink-0 mt-0.5 border-gray-200 rounded-full text-blue-600 focus:ring-blue-500 checked:border-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
+                                            id="shipping_method_{{ $shipping_method->hash }}">
+                                        @if ($shipping_method->logo_url)
+                                            <img src="{{ $shipping_method->logo_url }}" class="h-5" />
+                                        @endif
+
+                                        <span
+                                            class="text-sm text-gray-500 ms-3 dark:text-neutral-400">{{ $shipping_method->label }}
+                                        </span>
+                                    </div>
+                                    <span class="text-sm text-gray-800">
+                                        {{ $shipping_method->cost_formatted }}
                                     </span>
-                                </div>
-                                <span class="text-sm text-gray-800">
-                                    Rp.123.123
-                                </span>
-                            </label>
-                        @endfor
-                        <div class="text-xs text-red-600">Fill Shipping Address First</div>
+                                </label>
+                            @endforeach
+                        @empty
+                            <div class="text-xs text-red-600">Fill Shipping Address First</div>
+                        @endforelse
+
                     </div>
                 </div>
 
@@ -189,10 +200,20 @@
                             class="inline-flex items-center px-4 py-3 -mt-px text-sm text-gray-800 border border-gray-200 gap-x-2 first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:border-neutral-700 dark:text-neutral-200">
                             <div class="flex items-center justify-between w-full">
                                 <span class="flex flex-col">
-                                    <span>Shipping (JNT YES)</span>
-                                    <span class="text-xs">570 gram</span>
+                                    <span>{{ $this->shipping_method?->label ?? '-' }}</span>
+                                    <span class="text-xs">{{ $this->shipping_method?->weight ?? 0 }} gram</span>
                                 </span>
-                                <span>{{ data_get($this->summaries, 'shipping_total_formatted') }}</span>
+                                <span class="relative">
+                                    {{ data_get($this->summaries, 'shipping_total_formatted') }}
+
+                                    <div wire:loading wire:target="shipping_selector.shipping_method"
+                                        class="absolute right-3 top-3 animate-spin inline-block size-4 border-3 border-current border-t-transparent text-blue-500 rounded-full dark:text-blue-500"
+                                        role="status" aria-label="loading">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </span>
+
+
                             </div>
                         </li>
                         <li

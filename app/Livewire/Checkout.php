@@ -8,6 +8,7 @@ use App\Data\RegionData;
 use App\Data\ShippingData;
 use App\Services\RegionQueryService;
 use App\Services\ShippingMethodService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Number;
 use Livewire\Component;
@@ -21,6 +22,7 @@ class Checkout extends Component
         'phone' => null,
         'address_line' => null,
         'destination_region_code' => null,
+        'shipping_hash' => null
     ];
     public array $summaries = [
         'sub_total' => 0,
@@ -36,12 +38,16 @@ class Checkout extends Component
         'region_selected' => null
     ];
 
+    public array $shipping_selector = [
+        'shipping_method' => null
+    ];
+
     public function calculateTotal()
     {
         data_set($this->summaries, 'sub_total', $this->cart->total);
         data_set($this->summaries, 'sub_total_formatted', $this->cart->total_formatted);
 
-        $shipping_cost = 0;
+        $shipping_cost = $this->shipping_method?->cost ?? 0;
         data_set($this->summaries, 'shipping_total', $shipping_cost);
         data_set($this->summaries, 'shipping_total_formatted', Number::currency($shipping_cost));
 
@@ -94,6 +100,7 @@ class Checkout extends Component
             'data.phone' => ['required', 'min:7', 'max:13'],
             'data.address_line' => ['required', 'min:7', 'max:255'],
             'data.destination_region_code' => ['required'],
+            'data.shipping_hash' => ['required']
         ];
     }
 
@@ -103,7 +110,7 @@ class Checkout extends Component
     }
 
     /** @return DataCollection<ShippingData> */
-    public function getShippingMethodsProperty(RegionQueryService $region_query, ShippingMethodService $shipping_service): DataCollection
+    public function getShippingMethodsProperty(RegionQueryService $region_query, ShippingMethodService $shipping_service): DataCollection|Collection
     {
         if (!data_get($this->data, 'destination_region_code')) {
             return new DataCollection(ShippingData::class, []);
@@ -113,7 +120,29 @@ class Checkout extends Component
             $region_query->searchRegionByCode($origin_code),
             $region_query->searchRegionByCode(data_get($this->data, 'destination_region_code')),
             $this->cart
-        );
+        )->toCollection()->groupBy('service');
+    }
+
+    public function getShippingMethodProperty(ShippingMethodService $shipping_service): ?ShippingData
+    {
+        if (empty(data_get($this->data, 'shipping_hash')) || empty(data_get($this->data, 'destination_region_code'))) {
+            return null;
+        }
+
+        $data = $shipping_service->getShippingMethod(data_get($this->data, 'shipping_hash'));
+
+        if ($data == null) {
+            $this->addError('shipping_hash', "Shipping Cost Missing");
+            redirect()->route('checkout');
+        }
+
+        return $data;
+    }
+
+    public function updatedShippingSelectorShippingMethod($value)
+    {
+        data_set($this->data, 'shipping_hash', $value);
+        $this->calculateTotal();
     }
 
     public function placeAnOrder()
