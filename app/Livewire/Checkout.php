@@ -6,6 +6,9 @@ use App\Contract\CartServiceInterface;
 use App\Data\CartData;
 use App\Data\RegionData;
 use App\Data\ShippingData;
+use App\Rules\ValidPaymentMethodHash;
+use App\Rules\ValidShippingHash;
+use App\Services\PaymentMethodQueryService;
 use App\Services\RegionQueryService;
 use App\Services\ShippingMethodService;
 use Illuminate\Support\Collection;
@@ -22,8 +25,10 @@ class Checkout extends Component
         'phone' => null,
         'address_line' => null,
         'destination_region_code' => null,
-        'shipping_hash' => null
+        'shipping_hash' => null,
+        'payment_method_hash' => null
     ];
+
     public array $summaries = [
         'sub_total' => 0,
         'sub_total_formatted' => '-',
@@ -40,6 +45,10 @@ class Checkout extends Component
 
     public array $shipping_selector = [
         'shipping_method' => null
+    ];
+
+    public array $payment_method_selector = [
+        'payment_method_selected' => null
     ];
 
     public function calculateTotal()
@@ -89,6 +98,11 @@ class Checkout extends Component
         if (!Gate::inspect('is_stock_available')->allowed()) {
             return redirect()->route('cart');
         }
+
+        if ($this->cart->total_quantity <= 0) {
+            return redirect()->route('cart');
+        }
+
         $this->calculateTotal();
     }
 
@@ -98,9 +112,10 @@ class Checkout extends Component
             'data.full_name' => ['required', 'min:3', 'max:255'],
             'data.email' => ['required', 'email', 'max:255'],
             'data.phone' => ['required', 'min:7', 'max:13'],
-            'data.address_line' => ['required', 'min:7', 'max:255'],
-            'data.destination_region_code' => ['required'],
-            'data.shipping_hash' => ['required']
+            'data.address_line' => ['required', 'min:10', 'max:255'],
+            'data.destination_region_code' => ['required', 'exists:regions,code'],
+            'data.shipping_hash' => ['required', new ValidShippingHash()],
+            'data.payment_method_hash' => ['required', new ValidPaymentMethodHash()]
         ];
     }
 
@@ -143,6 +158,16 @@ class Checkout extends Component
     {
         data_set($this->data, 'shipping_hash', $value);
         $this->calculateTotal();
+    }
+
+    public function getPaymentMethodsProperty(PaymentMethodQueryService $query_service): DataCollection
+    {
+        return $query_service->getPaymentMethods();
+    }
+
+    public function updatedPaymentMethodSelectorPaymentMethodSelected($value)
+    {
+        data_set($this->data, 'payment_method_hash', $value);
     }
 
     public function placeAnOrder()
